@@ -82,7 +82,7 @@ jobs:
         env:
           DOCKER_PUSH: true
           DOCKER_REPOSITORY: github.com/lujiajing1126/ilogtail
-        run: VERSION=${$GITHUB_REF_NAME#v} make multi-arch-docker
+        run: VERSION=${GITHUB_REF_NAME#v} make multi-arch-docker
 
   result:
     runs-on: ubuntu-latest
