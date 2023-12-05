@@ -81,7 +81,7 @@ jobs:
         if: matrix.runner == 'ubuntu-latest'
         env:
           DOCKER_PUSH: true
-          DOCKER_REPOSITORY: github.com/lujiajing1126/ilogtail
+          DOCKER_REPOSITORY: ghcr.io/lujiajing1126/ilogtail
         run: VERSION=${GITHUB_REF_NAME#v} make docker
 
   result:
