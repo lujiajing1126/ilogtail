@@ -28,8 +28,7 @@ func (c *Converter) ConvertToJsonlineProtocolStreamFlatten(logGroup *protocol.Lo
 				return nil, nil, fmt.Errorf("unable to marshal log: %v", log)
 			}
 			// trim and append a \n
-			trimRightByte(joinedStream, sep[0])
-			joinedStream = append(joinedStream, sep[0])
+			joinedStream = append(trimRightByte(joinedStream, sep[0]), sep[0])
 		default:
 			return nil, nil, fmt.Errorf("unsupported encoding format: %s", c.Encoding)
 		}
