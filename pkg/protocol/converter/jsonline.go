@@ -1,6 +1,8 @@
 package protocol
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -19,18 +21,34 @@ func (c *Converter) ConvertToJsonlineProtocolStreamFlatten(logGroup *protocol.Lo
 	for _, log := range convertedLogs {
 		switch c.Encoding {
 		case EncodingJSON:
-			b, err := marshalWithoutHTMLEscaped(log)
+			err := marshalWithoutHTMLEscapedWithoutAlloc(log, joinedStream)
 			if err != nil {
+				// release byte buffer
+				PutPooledByteBuf(&joinedStream)
 				return nil, nil, fmt.Errorf("unable to marshal log: %v", log)
 			}
-			joinedStream = append(joinedStream, b...)
-			// reset bytes
-			b = b[:0]
-			b = nil
-			joinedStream = append(joinedStream, sep...)
+			// trim and append a \n
+			trimRightByte(joinedStream, sep[0])
+			joinedStream = append(joinedStream, sep[0])
 		default:
 			return nil, nil, fmt.Errorf("unsupported encoding format: %s", c.Encoding)
 		}
 	}
 	return joinedStream, nil, nil
+}
+
+func marshalWithoutHTMLEscapedWithoutAlloc(data interface{}, dst []byte) error {
+	jsonEncoder := json.NewEncoder(bytes.NewBuffer(dst))
+	jsonEncoder.SetEscapeHTML(false)
+	if err := jsonEncoder.Encode(data); err != nil {
+		return err
+	}
+	return nil
+}
+
+func trimRightByte(s []byte, c byte) []byte {
+	for len(s) > 0 && s[len(s)-1] == c {
+		s = s[:len(s)-1]
+	}
+	return s
 }
