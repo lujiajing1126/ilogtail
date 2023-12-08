@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -16,18 +15,19 @@ func (c *Converter) ConvertToJsonlineProtocolStreamFlatten(logGroup *protocol.Lo
 	if err != nil {
 		return nil, nil, err
 	}
-	serializedLogs := make([][]byte, len(convertedLogs))
-	for i, log := range convertedLogs {
+	joinedStream := *GetPooledByteBuf()
+	for _, log := range convertedLogs {
 		switch c.Encoding {
 		case EncodingJSON:
 			b, err := marshalWithoutHTMLEscaped(log)
 			if err != nil {
 				return nil, nil, fmt.Errorf("unable to marshal log: %v", log)
 			}
-			serializedLogs[i] = b
+			joinedStream = append(joinedStream, b...)
+			joinedStream = append(joinedStream, sep...)
 		default:
 			return nil, nil, fmt.Errorf("unsupported encoding format: %s", c.Encoding)
 		}
 	}
-	return bytes.Join(serializedLogs, sep), nil, nil
+	return joinedStream, nil, nil
 }
