@@ -75,6 +75,9 @@ func TestNewConvertToJsonlineLogs(t *testing.T) {
 				So(err, ShouldBeNil)
 
 				for _, s := range bytes.Split(b.([]byte), []byte("\n")) {
+					if len(s) == 0 {
+						continue
+					}
 					unmarshaledLog := make(map[string]interface{})
 					err = json.Unmarshal(s, &unmarshaledLog)
 					So(err, ShouldBeNil)
@@ -160,6 +163,9 @@ func TestNewConvertToJsonlineLogs(t *testing.T) {
 				So(err, ShouldBeNil)
 
 				for _, s := range bytes.Split(b.([]byte), []byte("\n")) {
+					if len(s) == 0 {
+						continue
+					}
 					unmarshaledLog := make(map[string]interface{})
 					err = json.Unmarshal(s, &unmarshaledLog)
 					So(err, ShouldBeNil)
@@ -223,6 +229,9 @@ func TestNewConvertToJsonlineLogs(t *testing.T) {
 				So(err, ShouldBeNil)
 
 				for _, s := range bytes.Split(b.([]byte), []byte("\n")) {
+					if len(s) == 0 {
+						continue
+					}
 					unmarshaledLog := make(map[string]interface{})
 					err = json.Unmarshal(s, &unmarshaledLog)
 					So(err, ShouldBeNil)
