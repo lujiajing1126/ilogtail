@@ -2,8 +2,9 @@ package protocol
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
+
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
@@ -18,17 +19,21 @@ func (c *Converter) ConvertToJsonlineProtocolStreamFlatten(logGroup *protocol.Lo
 		return nil, nil, err
 	}
 	joinedStream := *GetPooledByteBuf()
-	for _, log := range convertedLogs {
+	for i, log := range convertedLogs {
 		switch c.Encoding {
 		case EncodingJSON:
-			err := marshalWithoutHTMLEscapedWithoutAlloc(log, joinedStream)
+			var err error
+			joinedStream, err = marshalWithoutHTMLEscapedWithoutAlloc(log, bytes.NewBuffer(joinedStream))
 			if err != nil {
 				// release byte buffer
 				PutPooledByteBuf(&joinedStream)
 				return nil, nil, fmt.Errorf("unable to marshal log: %v", log)
 			}
 			// trim and append a \n
-			joinedStream = append(trimRightByte(joinedStream, sep[0]), sep[0])
+			joinedStream = trimRightByte(joinedStream, sep[0])
+			if i < len(convertedLogs)-1 {
+				joinedStream = append(joinedStream, sep[0])
+			}
 		default:
 			return nil, nil, fmt.Errorf("unsupported encoding format: %s", c.Encoding)
 		}
@@ -36,13 +41,12 @@ func (c *Converter) ConvertToJsonlineProtocolStreamFlatten(logGroup *protocol.Lo
 	return joinedStream, nil, nil
 }
 
-func marshalWithoutHTMLEscapedWithoutAlloc(data interface{}, dst []byte) error {
-	jsonEncoder := json.NewEncoder(bytes.NewBuffer(dst))
-	jsonEncoder.SetEscapeHTML(false)
-	if err := jsonEncoder.Encode(data); err != nil {
-		return err
+func marshalWithoutHTMLEscapedWithoutAlloc(data interface{}, bf *bytes.Buffer) ([]byte, error) {
+	enc := jsoniter.ConfigFastest.NewEncoder(bf)
+	if err := enc.Encode(data); err != nil {
+		return nil, err
 	}
-	return nil
+	return bf.Bytes(), nil
 }
 
 func trimRightByte(s []byte, c byte) []byte {
